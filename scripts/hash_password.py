@@ -1,6 +1,6 @@
 from getpass import getpass
 
-from backend.auth import hash_password
+from backend.passwords import hash_password
 
 
 if __name__ == "__main__":

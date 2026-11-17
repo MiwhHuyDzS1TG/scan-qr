@@ -11,7 +11,6 @@ from urllib.parse import urlparse
 
 MEMBER_ID_PATTERN = re.compile(r"^[A-Za-z0-9_-]{1,64}$")
 DEFAULT_BASE_URL = "https://chuyencan.chuyenthanglongdalat.edu.vn"
-REQUIRED_MEMBER_IDS = ("MinhHuy", "HoangPhong", "GiaLam", "MinhKhang", "NgocDuc", "KimNgan")
 
 
 class ConfigurationError(RuntimeError):
@@ -19,13 +18,39 @@ class ConfigurationError(RuntimeError):
 
 
 def _json_object(raw: str, label: str) -> dict[str, Any]:
+    def reject_duplicate_keys(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+        result: dict[str, Any] = {}
+        for key, value in pairs:
+            if key in result:
+                raise ConfigurationError(f"{label} chứa khóa trùng: {key!r}.")
+            result[key] = value
+        return result
+
     try:
-        value = json.loads(raw)
+        value = json.loads(raw, object_pairs_hook=reject_duplicate_keys)
     except json.JSONDecodeError as exc:
         raise ConfigurationError(f"{label} không phải JSON hợp lệ.") from exc
     if not isinstance(value, dict):
         raise ConfigurationError(f"{label} phải là một JSON object.")
     return value
+
+
+def _validate_members(source: dict[str, Any]) -> dict[str, str]:
+    if not source:
+        raise ConfigurationError("Nguồn QR phải chứa ít nhất một thành viên.")
+
+    members: dict[str, str] = {}
+    qr_values: set[str] = set()
+    for member_id, qr_data in source.items():
+        if not isinstance(member_id, str) or not MEMBER_ID_PATTERN.fullmatch(member_id):
+            raise ConfigurationError(f"Member ID không hợp lệ: {member_id!r}")
+        if not isinstance(qr_data, str) or not qr_data.strip() or len(qr_data) > 2048:
+            raise ConfigurationError(f"QR data của {member_id} không hợp lệ.")
+        if qr_data in qr_values:
+            raise ConfigurationError("Phát hiện QR data trùng giữa các thành viên.")
+        qr_values.add(qr_data)
+        members[member_id] = qr_data
+    return members
 
 
 def _load_members() -> dict[str, str]:
@@ -38,29 +63,7 @@ def _load_members() -> dict[str, str]:
             return {}
         source = _json_object(path.read_text(encoding="utf-8-sig"), str(path))
 
-    members: dict[str, str] = {}
-    qr_values: set[str] = set()
-    for member_id, qr_data in source.items():
-        if not isinstance(member_id, str) or not MEMBER_ID_PATTERN.fullmatch(member_id):
-            raise ConfigurationError(f"Member ID không hợp lệ: {member_id!r}")
-        if not isinstance(qr_data, str) or not (4 <= len(qr_data) <= 2048):
-            raise ConfigurationError(f"QR data của {member_id} không hợp lệ.")
-        if qr_data in qr_values:
-            raise ConfigurationError("Phát hiện QR data trùng giữa các thành viên.")
-        qr_values.add(qr_data)
-        members[member_id] = qr_data
-    expected = set(REQUIRED_MEMBER_IDS)
-    actual = set(members)
-    if actual != expected:
-        missing = sorted(expected - actual)
-        unexpected = sorted(actual - expected)
-        details = []
-        if missing:
-            details.append("thiếu alias: " + ", ".join(missing))
-        if unexpected:
-            details.append("alias không được quản lý: " + ", ".join(unexpected))
-        raise ConfigurationError("Nguồn QR phải chứa chính xác 6 thành viên (" + "; ".join(details) + ").")
-    return members
+    return _validate_members(source)
 
 
 def _load_metadata() -> dict[str, dict[str, str]]:
@@ -106,12 +109,7 @@ class Settings:
     def __post_init__(self) -> None:
         if self.app_env not in {"development", "production", "test"}:
             raise ConfigurationError("APP_ENV phải là development, production hoặc test.")
-        expected_members = set(REQUIRED_MEMBER_IDS)
-        actual_members = set(self.members)
-        if actual_members != expected_members:
-            raise ConfigurationError("Nguồn QR phải chứa chính xác 6 thành viên được quản lý.")
-        if len(set(self.members.values())) != len(self.members):
-            raise ConfigurationError("Phát hiện QR data trùng giữa các thành viên.")
+        self.members = _validate_members(self.members)
         if not self.admin_username or self.admin_username.lower() in {"demo", "example"}:
             raise ConfigurationError("ADMIN_USERNAME chưa được cấu hình an toàn.")
         if not re.fullmatch(r"scrypt\$\d+\$[A-Za-z0-9_-]+\$\d+\$[A-Za-z0-9_-]+", self.admin_password_hash):

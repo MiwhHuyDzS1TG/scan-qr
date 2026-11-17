@@ -3,6 +3,7 @@ import { writeFile } from "node:fs/promises";
 const list = await fetch("http://127.0.0.1:9222/json/list").then((response) => response.json());
 const page = list.find((item) => item.type === "page");
 if (!page) throw new Error("No Chrome page target found");
+const baseUrl = process.env.QA_BASE_URL || "http://127.0.0.1:8000";
 const qaUsername = process.env.QA_USERNAME;
 const qaPassword = process.env.QA_PASSWORD;
 if (!qaUsername || !qaPassword) throw new Error("QA_USERNAME and QA_PASSWORD are required");
@@ -62,7 +63,7 @@ await send("Network.enable");
 await send("Network.setCacheDisabled", { cacheDisabled: true });
 await send("Network.clearBrowserCookies");
 await send("Emulation.setDeviceMetricsOverride", { width: 1440, height: 1000, deviceScaleFactor: 1, mobile: false });
-await send("Page.navigate", { url: "http://127.0.0.1:8000" });
+await send("Page.navigate", { url: baseUrl });
 await waitFor("document.readyState === 'complete'");
 await waitFor("document.querySelector('#login-view') && !document.querySelector('#login-view').hidden");
 await screenshot("tests/qa-login-desktop.png");
@@ -73,7 +74,9 @@ await evaluate(`(() => {
   document.querySelector('#login-form').requestSubmit();
 })()`);
 await waitFor("document.querySelector('#app-view') && !document.querySelector('#app-view').hidden");
-await waitFor("document.querySelectorAll('.member-row').length === 6");
+await waitFor("document.querySelectorAll('.member-row').length > 0");
+const expectedMemberCount = await evaluate("fetch('/api/members').then(response => response.json()).then(data => data.members.length)");
+await waitFor(`document.querySelectorAll('.member-row').length === ${expectedMemberCount}`);
 await waitFor("document.querySelector('#system-status')?.innerText.trim() !== 'Đang kiểm tra'");
 await screenshot("tests/qa-dashboard-desktop.png");
 
@@ -97,7 +100,7 @@ await evaluate("document.querySelector('#theme-toggle').click()");
 await waitFor("document.documentElement.dataset.theme === 'dark'");
 
 await evaluate("document.querySelector('#select-visible').click()");
-await waitFor("document.querySelector('#scan-button').innerText.includes('6')");
+await waitFor(`document.querySelector('#scan-button').innerText.includes('${expectedMemberCount}')`);
 const selectAll = await evaluate(`({
   selected: [...document.querySelectorAll('.member-checkbox')].filter(input => input.checked).length,
   scanLabel: document.querySelector('#scan-button').innerText.trim(),
@@ -135,5 +138,5 @@ for (const [width, height] of [[1920, 1080], [1366, 768], [768, 900], [390, 844]
   if (width === 320) await screenshot("tests/qa-dashboard-mobile-320.png");
 }
 
-console.log(JSON.stringify({ desktop, mobile, lightTheme, responsive, selectAll, scanPostCount, confirmation, processed, issues }, null, 2));
+console.log(JSON.stringify({ expectedMemberCount, desktop, mobile, lightTheme, responsive, selectAll, scanPostCount, confirmation, processed, issues }, null, 2));
 socket.close();

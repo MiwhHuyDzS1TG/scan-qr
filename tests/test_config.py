@@ -1,11 +1,14 @@
 import pytest
 
 from backend.auth import SessionManager, hash_password
-from backend.config import ConfigurationError, REQUIRED_MEMBER_IDS, Settings
+from backend.config import ConfigurationError, Settings, _json_object, _validate_members
+
+
+MEMBER_IDS = ("MinhHuy", "HoangPhong", "GiaLam", "MinhKhang", "NgocDuc", "KimNgan", "Ram")
 
 
 def member_mapping():
-    return {member_id: f"TEST_QR_{index:03d}" for index, member_id in enumerate(REQUIRED_MEMBER_IDS, 1)}
+    return {member_id: f"TEST_QR_{index:03d}" for index, member_id in enumerate(MEMBER_IDS, 1)}
 
 
 def production_settings(password: str = "strong-password-not-for-production"):
@@ -23,22 +26,32 @@ def production_settings(password: str = "strong-password-not-for-production"):
     )
 
 
-def test_required_aliases_are_exactly_six():
-    assert set(member_mapping()) == {"MinhHuy", "HoangPhong", "GiaLam", "MinhKhang", "NgocDuc", "KimNgan"}
-
-
-def test_settings_rejects_missing_or_extra_aliases():
+def test_settings_accepts_ram_and_future_members():
     members = member_mapping()
-    members.pop("KimNgan")
-    with pytest.raises(ConfigurationError, match="chính xác 6"):
-        Settings(
-            app_env="test",
-            members=members,
-            member_metadata={},
-            admin_username="test-admin",
-            admin_password_hash=hash_password("strong-password", salt=b"config-test-salt"),
-            session_secret="test-session-secret-with-more-than-32-characters",
-        )
+    members["FutureMember"] = "TEST_QR_008"
+    settings = Settings(
+        app_env="test",
+        members=members,
+        member_metadata={},
+        admin_username="test-admin",
+        admin_password_hash=hash_password("strong-password", salt=b"config-test-salt"),
+        session_secret="test-session-secret-with-more-than-32-characters",
+    )
+    assert list(settings.members) == [*MEMBER_IDS, "FutureMember"]
+
+
+def test_member_validation_rejects_empty_qr_and_duplicate_qr():
+    with pytest.raises(ConfigurationError, match="ít nhất một"):
+        _validate_members({})
+    with pytest.raises(ConfigurationError, match="không hợp lệ"):
+        _validate_members({"Ram": "   "})
+    with pytest.raises(ConfigurationError, match="QR data trùng"):
+        _validate_members({"Ram": "same", "Another": "same"})
+
+
+def test_json_parser_rejects_duplicate_alias_keys():
+    with pytest.raises(ConfigurationError, match="khóa trùng"):
+        _json_object('{"Ram":"first","Ram":"second"}', "QR_DATA_JSON")
 
 
 def test_production_rejects_demo_password():

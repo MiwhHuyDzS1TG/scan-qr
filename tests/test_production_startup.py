@@ -4,7 +4,9 @@ import subprocess
 import sys
 
 from backend.auth import hash_password
-from backend.config import REQUIRED_MEMBER_IDS
+
+
+MEMBER_IDS = ("MinhHuy", "HoangPhong", "GiaLam", "MinhKhang", "NgocDuc", "KimNgan", "Ram")
 
 
 def test_production_app_imports_without_network_or_real_secrets():
@@ -16,7 +18,7 @@ def test_production_app_imports_without_network_or_real_secrets():
             "ADMIN_PASSWORD_HASH": hash_password("production-test-password", salt=b"startup-test-salt"),
             "SESSION_SECRET": "production-startup-test-secret-more-than-32-characters",
             "QR_DATA_JSON": json.dumps(
-                {member_id: f"STARTUP_TEST_QR_{index:03d}" for index, member_id in enumerate(REQUIRED_MEMBER_IDS, 1)}
+                {member_id: f"STARTUP_TEST_QR_{index:03d}" for index, member_id in enumerate(MEMBER_IDS, 1)}
             ),
             "MEMBER_METADATA_JSON": "{}",
             "CF_CLEARANCE": "test-cookie",

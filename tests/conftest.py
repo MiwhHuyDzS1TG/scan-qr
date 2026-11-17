@@ -26,6 +26,7 @@ TEST_MEMBERS = {
     "MinhKhang": "TEST_QR_004",
     "NgocDuc": "TEST_QR_005",
     "KimNgan": "TEST_QR_006",
+    "Ram": "TEST_QR_007",
 }
 
 os.environ.update(

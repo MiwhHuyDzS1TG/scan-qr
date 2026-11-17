@@ -6,7 +6,7 @@ from backend.normalization import normalize_attendance_response
 
 TEST_USERNAME = "test-admin"
 TEST_PASSWORD = "test-password-not-for-production"
-EXPECTED_ALIASES = {"MinhHuy", "HoangPhong", "GiaLam", "MinhKhang", "NgocDuc", "KimNgan"}
+EXPECTED_ALIASES = {"MinhHuy", "HoangPhong", "GiaLam", "MinhKhang", "NgocDuc", "KimNgan", "Ram"}
 
 
 def authenticated_client():
@@ -28,7 +28,7 @@ def test_members_api_never_exposes_qr_values():
     body = response.text
     assert "qr_data" not in body
     assert {item["alias"] for item in response.json()["members"]} == EXPECTED_ALIASES
-    assert len(response.json()["members"]) == 6
+    assert len(response.json()["members"]) == 7
     for qr_value in main.settings.members.values():
         assert qr_value not in body
 

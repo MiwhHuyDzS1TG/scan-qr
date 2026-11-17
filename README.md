@@ -13,7 +13,7 @@ Dashboard quản trị điểm danh QR dùng FastAPI và Vanilla JavaScript. QR,
 
 ## Thành viên được quản lý
 
-Nguồn QR phải chứa chính xác sáu alias sau: `MinhHuy`, `HoangPhong`, `GiaLam`, `MinhKhang`, `NgocDuc`, `KimNgan`. Ứng dụng fail closed nếu thiếu alias, có alias thừa hoặc có QR trùng. Mã QR thật không nằm trong tài liệu, frontend hoặc bundle Vercel.
+Danh sách thành viên được lấy hoàn toàn từ nguồn QR riêng tư. Hiện nguồn local có `MinhHuy`, `HoangPhong`, `GiaLam`, `MinhKhang`, `NgocDuc`, `KimNgan` và `Ram`. Khi thêm alias hợp lệ vào JSON, backend và UI tự nhận thành viên mới mà không cần sửa code. Ứng dụng fail closed nếu nguồn rỗng, alias sai định dạng, khóa JSON trùng, QR rỗng hoặc QR trùng. Mã QR thật không nằm trong tài liệu, frontend hoặc bundle Vercel.
 
 Thứ tự nguồn dữ liệu backend:
 
@@ -21,7 +21,7 @@ Thứ tự nguồn dữ liệu backend:
 2. File tại `QR_DATA_FILE` nếu biến này được đặt.
 3. `qr_data.json` trong project root.
 
-Vì biến môi trường có ưu tiên cao nhất, không để một `QR_DATA_JSON` cũ trên Vercel. Validation chính xác sáu alias sẽ ngăn cấu hình cũ hoặc dữ liệu mẫu khởi động âm thầm.
+Vì biến môi trường có ưu tiên cao nhất, không để một `QR_DATA_JSON` cũ trên Vercel. Danh sách hiển thị luôn phản ánh đúng nguồn đang có hiệu lực.
 
 ## Chạy local
 
@@ -61,7 +61,7 @@ Mở `http://127.0.0.1:8000` và đăng nhập bằng tài khoản vừa cấu h
 | `ADMIN_PASSWORD_HASH` | Bắt buộc | Hash scrypt hợp lệ tạo bằng script. Production từ chối mật khẩu mặc định không an toàn. |
 | `SESSION_SECRET` | Bắt buộc | Chuỗi ngẫu nhiên tối thiểu 32 ký tự, không dùng placeholder. |
 | `SESSION_TTL_SECONDS` | Không | Mặc định 28.800 giây, cho phép 900 đến 86.400. |
-| `QR_DATA_JSON` | Bắt buộc trên Vercel | JSON object riêng tư chứa đúng sáu alias. |
+| `QR_DATA_JSON` | Bắt buộc trên Vercel | JSON object riêng tư chứa toàn bộ thành viên cần quản lý. |
 | `QR_DATA_FILE` | Không | Đường dẫn file QR riêng tư local; mặc định `qr_data.json`. |
 | `MEMBER_METADATA_JSON` | Không | Tên/lớp/STT kỳ vọng để phát hiện mismatch danh tính. |
 | `CF_CLEARANCE` | Bắt buộc | Cookie upstream phía server. |
@@ -69,13 +69,13 @@ Mở `http://127.0.0.1:8000` và đăng nhập bằng tài khoản vừa cấu h
 | `REMEMBER_WEB` | Bắt buộc | Cookie upstream phía server. |
 | `XSRF_TOKEN` | Bắt buộc | Cookie upstream phía server. |
 
-Production không khởi động nếu thiếu tài khoản, hash, session secret, cookie upstream hoặc mapping sáu người. Không commit `.env`, `qr_data.json`, cookie hay secret.
+Production không khởi động nếu thiếu tài khoản, hash, session secret, cookie upstream hoặc nguồn thành viên hợp lệ. Không commit `.env`, `qr_data.json`, cookie hay secret.
 
 ## Sử dụng dashboard
 
 1. Đăng nhập bằng tài khoản quản trị đã cấu hình.
-2. Kiểm tra danh sách có đủ sáu alias. Có thể tìm kiếm, lọc và chọn riêng từng người.
-3. Chọn tất cả để nút hiển thị `Quét 6 thành viên`, hoặc chọn một/nhiều người tùy nhu cầu.
+2. Kiểm tra danh sách phản ánh đầy đủ các alias trong nguồn JSON. Có thể tìm kiếm, lọc và chọn riêng từng người.
+3. Chọn tất cả để quét toàn bộ danh sách hiện tại, hoặc chọn một/nhiều người tùy nhu cầu.
 4. Đọc modal và bấm xác nhận. Queue xử lý tuần tự với concurrency bằng 1.
 5. Theo dõi progress, badge trạng thái và Live terminal. Nút dừng chỉ ngăn người kế tiếp; request đang chạy vẫn được chờ hoàn tất.
 6. Mở drawer để xem response đã làm sạch, danh tính và giờ máy chủ; dùng CSV export để tải tổng kết.
@@ -136,12 +136,12 @@ vercel build
 vercel --prod
 ```
 
-Trước deploy, kiểm tra `QR_DATA_JSON` Production chứa đúng sáu alias và xóa/ghi đè giá trị cũ. Không dùng Preview values thay cho Production values. Nếu CLI chưa đăng nhập thì dừng ở `vercel login`; không coi đó là deploy thành công.
+Trước deploy, kiểm tra `QR_DATA_JSON` Production chứa đầy đủ danh sách hiện tại và xóa/ghi đè giá trị cũ. Không dùng Preview values thay cho Production values. Nếu CLI chưa đăng nhập thì dừng ở `vercel login`; không coi đó là deploy thành công.
 
 ## Xác minh production an toàn
 
 1. Truy cập `/`, đăng nhập và xác nhận CSS/JS tải bình thường.
-2. Xác nhận `/api/members` chỉ có sáu alias và không có QR.
+2. Xác nhận `/api/members` có đúng các alias trong nguồn cấu hình và không có QR.
 3. Bấm chip trạng thái để chạy GET kiểm tra session; không có POST ở bước này.
 4. Chỉ khi được ủy quyền, chọn đúng một thành viên thử nghiệm, đọc modal rồi xác nhận.
 5. So sánh tên, lớp, STT và `scanned_at_iso` trong drawer với hệ thống trường.
@@ -163,7 +163,7 @@ Muốn idempotency/rate limit/session invalidation toàn cục cần datastore c
 ## Troubleshooting
 
 - **Ứng dụng không khởi động**: đọc tên biến thiếu trong lỗi cấu hình; không in giá trị secret.
-- **QR source sai**: xóa `QR_DATA_JSON` mẫu/cũ hoặc cập nhật đủ đúng sáu alias; biến này luôn ưu tiên hơn file.
+- **QR source sai**: xóa `QR_DATA_JSON` mẫu/cũ hoặc cập nhật đầy đủ danh sách; biến này luôn ưu tiên hơn file.
 - **Phiên trường hết hạn / HTTP 419**: cập nhật cookie hợp lệ rồi bấm kiểm tra kết nối.
 - **Redirect về login**: app không follow redirect và không POST lại.
 - **Không tìm thấy CSRF**: POST không được gửi.

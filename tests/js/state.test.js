@@ -24,12 +24,12 @@ test("select visible only affects filtered results", () => {
   assert.equal(state.members[1].selected, true);
 });
 
-test("select all selects all six production aliases", () => {
-  const aliases = ["MinhHuy", "HoangPhong", "GiaLam", "MinhKhang", "NgocDuc", "KimNgan"];
+test("select all supports seven or more aliases", () => {
+  const aliases = ["MinhHuy", "HoangPhong", "GiaLam", "MinhKhang", "NgocDuc", "KimNgan", "Ram"];
   const state = createState();
   state.members = hydrateMembers(aliases.map((alias) => ({ id: alias, alias })));
   toggleVisibleSelection(state, true);
-  assert.equal(state.members.length, 6);
-  assert.equal(state.members.filter((member) => member.selected).length, 6);
+  assert.equal(state.members.length, 7);
+  assert.equal(state.members.filter((member) => member.selected).length, 7);
 });
 

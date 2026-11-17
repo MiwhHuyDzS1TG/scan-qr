@@ -29,6 +29,7 @@ os.environ.update(
                 "MinhKhang": "BROWSER_QR_004",
                 "NgocDuc": "BROWSER_QR_005",
                 "KimNgan": "BROWSER_QR_006",
+                "Ram": "BROWSER_QR_007",
             }
         ),
         "MEMBER_METADATA_JSON": "{}",
