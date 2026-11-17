@@ -1,0 +1,20 @@
+[project]
+name = "attendance-control-center"
+version = "1.0.0"
+description = "Secure QR attendance control dashboard"
+requires-python = ">=3.12,<3.15"
+dependencies = [
+  "fastapi>=0.117.1,<1",
+  "requests>=2.32,<3",
+  "beautifulsoup4>=4.13,<5",
+  "python-dotenv>=1.1,<2",
+  "pydantic>=2.11,<3",
+  "tzdata>=2025.2,<2028",
+]
+
+[tool.vercel]
+entrypoint = "main:app"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

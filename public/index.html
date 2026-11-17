@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="vi" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="dark light" />
+    <meta name="theme-color" content="#090b10" />
+    <meta name="description" content="Trung tâm điều khiển điểm danh QR dành cho quản trị viên được ủy quyền." />
+    <title>Attendance Control Center</title>
+    <link rel="stylesheet" href="/css/style.css" />
+  </head>
+  <body>
+    <div id="login-view" class="auth-shell">
+      <main class="auth-card" aria-labelledby="login-title">
+        <div class="brand-lockup brand-lockup-auth">
+          <span class="brand-mark" aria-hidden="true"><i data-lucide="scan-line"></i></span>
+          <span><strong>Attendance</strong><small>Control Center</small></span>
+        </div>
+        <div class="auth-copy">
+          <span class="eyebrow">KHU VỰC QUẢN TRỊ</span>
+          <h1 id="login-title">Kiểm soát điểm danh, rõ từng kết quả.</h1>
+          <p>Đăng nhập để quản lý hàng đợi quét QR. Dữ liệu xác thực chỉ được xử lý ở máy chủ.</p>
+        </div>
+        <form id="login-form" class="auth-form" novalidate>
+          <label>
+            <span>Tài khoản</span>
+            <span class="input-shell"><i data-lucide="user-round"></i><input id="username" name="username" autocomplete="username" required /></span>
+          </label>
+          <label>
+            <span>Mật khẩu</span>
+            <span class="input-shell"><i data-lucide="key-round"></i><input id="password" name="password" type="password" autocomplete="current-password" required /></span>
+          </label>
+          <p id="login-error" class="form-error" role="alert" hidden></p>
+          <button id="login-button" class="button button-primary button-wide" type="submit">
+            <span>Đăng nhập an toàn</span><i data-lucide="arrow-right"></i>
+          </button>
+        </form>
+        <p class="auth-footnote"><i data-lucide="shield-check"></i> Phiên đăng nhập dùng cookie HttpOnly và SameSite nghiêm ngặt.</p>
+      </main>
+    </div>
+
+    <div id="app-view" class="app-shell" hidden>
+      <div id="mobile-backdrop" class="mobile-backdrop" hidden></div>
+      <aside id="sidebar" class="sidebar" aria-label="Điều hướng chính">
+        <div class="sidebar-top">
+          <a class="brand-lockup" href="#overview" data-nav="overview" aria-label="Attendance Control Center">
+            <span class="brand-mark" aria-hidden="true"><i data-lucide="scan-line"></i></span>
+            <span class="brand-copy"><strong>Attendance</strong><small>Control Center</small></span>
+          </a>
+          <button id="collapse-sidebar" class="icon-button sidebar-collapse" type="button" aria-label="Thu gọn thanh bên" aria-pressed="false"><i data-lucide="panel-left-close"></i></button>
+        </div>
+        <nav class="nav-list">
+          <a class="nav-item active" href="#overview" data-nav="overview"><i data-lucide="layout-dashboard"></i><span>Tổng quan</span></a>
+          <a class="nav-item" href="#attendance" data-nav="attendance"><i data-lucide="qr-code"></i><span>Điểm danh</span><kbd>G</kbd></a>
+          <a class="nav-item" href="#logs" data-nav="logs"><i data-lucide="square-terminal"></i><span>Nhật ký</span></a>
+          <a class="nav-item" href="#settings" data-nav="settings"><i data-lucide="settings-2"></i><span>Cài đặt</span></a>
+        </nav>
+        <div class="sidebar-spacer"></div>
+        <div class="session-card">
+          <div class="session-icon"><i data-lucide="shield-check"></i></div>
+          <div class="session-copy"><small>Phiên làm việc</small><strong id="session-user">Quản trị viên</strong><span id="session-mode">Điểm danh thực tế</span></div>
+        </div>
+        <button id="logout-button" class="nav-item logout-button" type="button"><i data-lucide="log-out"></i><span>Đăng xuất</span></button>
+      </aside>
+
+      <div class="workspace">
+        <header class="topbar">
+          <div class="topbar-left">
+            <button id="mobile-menu" class="icon-button mobile-menu" type="button" aria-label="Mở điều hướng" aria-expanded="false"><i data-lucide="menu"></i></button>
+            <div class="breadcrumb"><span>Attendance Control</span><i data-lucide="chevron-right"></i><strong id="breadcrumb-page">Tổng quan</strong></div>
+          </div>
+          <div class="topbar-actions">
+            <div class="clock-block"><span id="current-date"></span><strong id="current-time"></strong></div>
+            <button id="system-status" class="status-chip status-checking" type="button" title="Kiểm tra lại kết nối"><i data-lucide="loader-circle"></i><span>Đang kiểm tra</span></button>
+            <button id="theme-toggle" class="icon-button" type="button" aria-label="Chuyển giao diện sáng tối"><i data-lucide="sun"></i></button>
+            <button id="admin-menu" class="admin-button" type="button" aria-label="Tài khoản quản trị"><span>QT</span><i data-lucide="chevron-down"></i></button>
+          </div>
+        </header>
+
+        <main class="main-content">
+          <section id="overview" class="page-intro anchor-section" aria-labelledby="page-title">
+            <div>
+              <div class="intro-meta"><span id="mode-badge" class="mode-badge">LIVE</span><span id="last-updated">Chưa có lượt quét trong phiên</span></div>
+              <h1 id="page-title">Trung tâm điểm danh</h1>
+              <p>Theo dõi từng yêu cầu từ lúc gửi đến khi xác minh, không tự động thử lại khi kết quả chưa rõ.</p>
+            </div>
+            <button id="focus-scan" class="button button-quiet" type="button"><i data-lucide="scan-line"></i><span>Đi tới hàng đợi</span></button>
+          </section>
+
+          <section class="metrics-grid" aria-label="Số liệu phiên làm việc">
+            <article class="metric metric-neutral"><span class="metric-icon"><i data-lucide="users-round"></i></span><div><small>Tổng thành viên</small><strong id="metric-total">0</strong><span>đã nạp an toàn</span></div></article>
+            <article class="metric metric-accent"><span class="metric-icon"><i data-lucide="list-checks"></i></span><div><small>Đã chọn</small><strong id="metric-selected">0</strong><span>trong hàng đợi</span></div></article>
+            <article class="metric metric-success"><span class="metric-icon"><i data-lucide="circle-check-big"></i></span><div><small>Điểm danh mới</small><strong id="metric-success">0</strong><span>được xác nhận</span></div></article>
+            <article class="metric metric-present"><span class="metric-icon"><i data-lucide="check-check"></i></span><div><small>Đã có mặt</small><strong id="metric-present">0</strong><span>từ trước đó</span></div></article>
+            <article class="metric metric-error"><span class="metric-icon"><i data-lucide="circle-x"></i></span><div><small>Thất bại</small><strong id="metric-failed">0</strong><span>lỗi xác định</span></div></article>
+            <article class="metric metric-warning"><span class="metric-icon"><i data-lucide="circle-alert"></i></span><div><small>Chưa xác minh</small><strong id="metric-unknown">0</strong><span>cần kiểm tra</span></div></article>
+          </section>
+
+          <section id="attendance" class="control-layout anchor-section" aria-label="Điều khiển quét">
+            <article class="panel scan-command">
+              <div class="panel-heading">
+                <div><span class="section-kicker">HÀNG ĐỢI</span><h2>Điều khiển quét</h2><p>Hệ thống xử lý tuần tự từng thành viên và cập nhật ngay sau mỗi phản hồi.</p></div>
+                <span id="queue-state" class="quiet-badge"><i data-lucide="pause"></i> Đang chờ</span>
+              </div>
+              <div class="scan-action-row">
+                <div class="selected-summary"><span id="selected-orbit">0</span><div><strong id="selected-label">Chưa chọn thành viên</strong><small id="selected-helper">Chọn ít nhất một người để bắt đầu.</small></div></div>
+                <div class="scan-buttons">
+                  <button id="stop-button" class="button button-danger-quiet" type="button" hidden><i data-lucide="square"></i><span>Dừng hàng đợi</span></button>
+                  <button id="scan-button" class="button button-primary" type="button" disabled><i data-lucide="scan-line"></i><span>Bắt đầu quét</span></button>
+                </div>
+              </div>
+              <div id="progress-wrap" class="progress-wrap" hidden>
+                <div class="progress-header"><span id="progress-current">Đang chuẩn bị</span><strong id="progress-count">0/0</strong></div>
+                <div class="progress-track" role="progressbar" aria-label="Tiến độ xử lý" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="progress-bar"></span></div>
+                <div class="progress-stats"><span><i class="tone-success"></i>Mới <strong id="progress-success">0</strong></span><span><i class="tone-present"></i>Đã có mặt <strong id="progress-present">0</strong></span><span><i class="tone-error"></i>Lỗi <strong id="progress-failed">0</strong></span><span><i class="tone-warning"></i>Chưa rõ <strong id="progress-unknown">0</strong></span></div>
+              </div>
+            </article>
+
+            <article class="panel presence-summary">
+              <div class="panel-heading compact"><div><span class="section-kicker">XÁC NHẬN HIỆN DIỆN</span><h2>Có mặt trong phiên</h2></div><i data-lucide="badge-check"></i></div>
+              <div class="presence-number"><strong id="verified-total">0</strong><span>người đã được xác nhận</span></div>
+              <div class="presence-breakdown"><span><b id="presence-new">0</b> mới</span><span><b id="presence-existing">0</b> trước đó</span></div>
+              <p><i data-lucide="info"></i> HTTP 200 không tự động được tính là điểm danh thành công.</p>
+            </article>
+          </section>
+
+          <section class="panel members-panel" aria-labelledby="members-heading">
+            <div class="members-header">
+              <div><span class="section-kicker">THÀNH VIÊN</span><h2 id="members-heading">Danh sách kiểm soát</h2></div>
+              <div class="search-box"><i data-lucide="search"></i><input id="member-search" type="search" placeholder="Tìm tên, lớp hoặc STT" aria-label="Tìm thành viên" /><kbd>⌘ K</kbd></div>
+            </div>
+            <div id="filter-tabs" class="filter-tabs" role="tablist" aria-label="Lọc trạng thái">
+              <button class="filter-tab active" type="button" role="tab" aria-selected="true" data-filter="all">Tất cả <span>0</span></button>
+              <button class="filter-tab" type="button" role="tab" aria-selected="false" data-filter="selected">Đã chọn <span>0</span></button>
+              <button class="filter-tab" type="button" role="tab" aria-selected="false" data-filter="idle">Chưa quét <span>0</span></button>
+              <button class="filter-tab" type="button" role="tab" aria-selected="false" data-filter="scanning">Đang xử lý <span>0</span></button>
+              <button class="filter-tab" type="button" role="tab" aria-selected="false" data-filter="success">Thành công <span>0</span></button>
+              <button class="filter-tab" type="button" role="tab" aria-selected="false" data-filter="already_present">Đã có mặt <span>0</span></button>
+              <button class="filter-tab" type="button" role="tab" aria-selected="false" data-filter="failed">Thất bại <span>0</span></button>
+              <button class="filter-tab" type="button" role="tab" aria-selected="false" data-filter="unknown">Chưa xác minh <span>0</span></button>
+            </div>
+            <div class="selection-bar">
+              <label class="check-control"><input id="select-visible" type="checkbox" /><span aria-hidden="true"><i data-lucide="check"></i><i data-lucide="minus"></i></span><b>Chọn kết quả đang hiển thị</b></label>
+              <span id="visible-count">0 thành viên</span>
+              <button id="clear-selection" class="text-button" type="button">Bỏ chọn tất cả</button>
+            </div>
+            <div id="member-list" class="member-list" aria-live="polite"></div>
+            <div id="member-empty" class="empty-state" hidden><span><i data-lucide="search-x"></i></span><h3>Không tìm thấy thành viên</h3><p>Thử từ khóa khác hoặc chuyển bộ lọc trạng thái.</p><button id="reset-filter" class="button button-quiet" type="button">Xóa bộ lọc</button></div>
+          </section>
+
+          <section id="logs" class="panel terminal-panel anchor-section" aria-labelledby="logs-heading">
+            <div class="terminal-header">
+              <div><span class="section-kicker">NHẬT KÝ PHIÊN</span><h2 id="logs-heading">Live terminal</h2></div>
+              <div class="terminal-tools">
+                <label><span class="sr-only">Lọc loại nhật ký</span><select id="log-level-filter"><option value="all">Mọi trạng thái</option><option value="INFO">INFO</option><option value="SEND">SEND</option><option value="HTTP">HTTP</option><option value="SUCCESS">SUCCESS</option><option value="EXISTS">EXISTS</option><option value="ERROR">ERROR</option><option value="WARN">WARN</option></select></label>
+                <label><span class="sr-only">Lọc thành viên</span><select id="log-member-filter"><option value="all">Mọi thành viên</option></select></label>
+                <button id="copy-logs" class="icon-button" type="button" aria-label="Sao chép nhật ký"><i data-lucide="copy"></i></button>
+                <button id="export-logs" class="icon-button" type="button" aria-label="Xuất nhật ký CSV"><i data-lucide="download"></i></button>
+                <button id="clear-logs" class="icon-button" type="button" aria-label="Xóa nhật ký hiển thị"><i data-lucide="trash-2"></i></button>
+              </div>
+            </div>
+            <div id="terminal-body" class="terminal-body" tabindex="0" aria-label="Dòng nhật ký trực tiếp"></div>
+            <div class="terminal-footer"><span id="log-count">0 sự kiện trong phiên</span><span><i data-lucide="lock-keyhole"></i> Dữ liệu nhạy cảm đã được loại bỏ</span></div>
+          </section>
+
+          <section id="settings" class="panel settings-panel anchor-section" aria-labelledby="settings-heading">
+            <div><span class="section-kicker">CẤU HÌNH</span><h2 id="settings-heading">Phạm vi phiên bản</h2><p>Thông tin cấu hình công khai, không bao gồm cookie, token hoặc QR data.</p></div>
+            <dl class="settings-grid">
+              <div><dt>Chế độ</dt><dd id="setting-mode">Điểm danh thực tế</dd></div>
+              <div><dt>Thành viên đã nạp</dt><dd id="setting-members">0</dd></div>
+              <div><dt>Chống quét trùng</dt><dd>Trong tab và function instance</dd></div>
+              <div><dt>Lưu nhật ký</dt><dd>Phiên trình duyệt hiện tại</dd></div>
+            </dl>
+          </section>
+        </main>
+      </div>
+    </div>
+
+    <div id="modal-backdrop" class="modal-backdrop" hidden>
+      <section id="dialog" class="dialog" role="dialog" aria-modal="true" aria-labelledby="dialog-title"></section>
+    </div>
+    <div id="drawer-backdrop" class="drawer-backdrop" hidden></div>
+    <aside id="detail-drawer" class="detail-drawer" aria-labelledby="drawer-title" aria-hidden="true"></aside>
+    <div id="toast-region" class="toast-region" aria-live="polite" aria-atomic="true"></div>
+    <div id="screen-reader-status" class="sr-only" aria-live="assertive"></div>
+
+    <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js" defer></script>
+    <script type="module" src="/js/app.js"></script>
+  </body>
+</html>

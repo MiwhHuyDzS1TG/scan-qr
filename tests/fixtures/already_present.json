@@ -1,0 +1,15 @@
+{
+  "success": false,
+  "is_simulation": false,
+  "message": "Đã điểm danh rồi!",
+  "scanned_at": "13:59",
+  "scanned_at_iso": "2026-11-17T13:59:41+07:00",
+  "attendance_status": "present",
+  "student": {
+    "name": "Trần Minh Huy",
+    "class_name": "12 TIN",
+    "avatar": "/storage/avatars/example.jpg",
+    "role": "student",
+    "student_number": "14"
+  }
+}

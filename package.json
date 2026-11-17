@@ -1,0 +1,9 @@
+{
+  "name": "attendance-control-center-tests",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/js/*.test.js",
+    "check": "node --check public/js/app.js && node --check public/js/api.js && node --check public/js/components.js && node --check public/js/scan-queue.js && node --check public/js/state.js && node --check public/js/utils.js"
+  }
+}
